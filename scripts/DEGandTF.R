@@ -41,10 +41,10 @@ if (NAME == "GL261"){
 }
 
 ## DEG and TF function for a given cell type
-Run_deg = function(cell_type, cell_line){
+Run_deg = function(cell_type, cell_line, a){
   counts_tmp = counts[,ct == cell_type]
   gene.size = counts_tmp %>% apply(1, sum)
-  counts_tmp = counts_tmp[gene.size > 24,]
+  counts_tmp = counts_tmp[gene.size > a,]
   design_tmp = design[ct == cell_type,]
   print(design_tmp)
   fit <- vsnMatrix(as.matrix(counts_tmp))
@@ -124,8 +124,16 @@ Run_deg = function(cell_type, cell_line){
 }
 
 # run function for all cell type in selected cell line
-for (cell_t in unique(ct)){
-  Run_deg(cell_t, cell_line = NAME)
-}
+unique(ct)
+Run_deg(cell_type = "Myeloid", cell_line = NAME, a = 4)
+Run_deg(cell_type = "T_cells", cell_line = NAME, a = 5)
+Run_deg(cell_type = "Tumor", cell_line = NAME, a = 6)
+Run_deg(cell_type = "Vascular", cell_line = NAME, a = 5)
+Run_deg(cell_type = "NK_cells", cell_line = NAME, a = 12)
+Run_deg(cell_type = "Neuroglia", cell_line = NAME, a = 10)
+Run_deg(cell_type = "Neutrophils", cell_line = NAME, a = 30)
+Run_deg(cell_type = "B_cells", cell_line = NAME, a = 14)
+
+
 
 
