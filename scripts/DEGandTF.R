@@ -12,7 +12,7 @@ library(ggrepel)
 library(limma)
 library(vsn)
 library(ggprism)
-source("scripts/CustomFunctions.R")
+source("CustomFunctions.R")
 
 # PKN
 net <- decoupleR::get_collectri(organism = 'mouse', 
@@ -30,13 +30,13 @@ if (NAME == "GL261"){
   design = data.frame(sample = colnames(counts),
                       condition = substring(colnames(counts), 10, 12))
   ct = colnames(counts) %>% sapply(function(x){
-    substring(x, 15, nchar(x))
+    substring(x, 16, nchar(x))
   }) %>% unname()
 }else {
   design = data.frame(sample = colnames(counts),
                       condition = substring(colnames(counts), 9, 11))
   ct = colnames(counts) %>% sapply(function(x){
-    substring(x, 16, nchar(x))
+    substring(x, 15, nchar(x))
   }) %>% unname()
 }
 
@@ -47,20 +47,20 @@ Run_deg = function(cell_type, cell_line){
   counts_tmp = counts_tmp[gene.size > 25,]
   design_tmp = design[ct == cell_type,]
   fit <- vsnMatrix(as.matrix(counts_tmp))
-  meanSdPlot(fit)
+  meanSdPlot(fit) # quality control
   counts_vsn <- as.data.frame(vsn::predict(fit,as.matrix(counts_tmp)))
+  
   limmaRes <- runLimma(counts_vsn, design_tmp, comparisons = list(c(2,-1)))
-  table <- ttopFormatter(topTable(limmaRes[[1]], coef = 1, number = 20000, adjust.method = "fdr"))
+
+  deg <- topTable(limmaRes[[1]], coef = 1, number = 20000, adjust.method = "fdr") %>%
+    select(logFC, t, P.Value) %>% 
+    rownames_to_column("ID") %>%
+    filter(!is.na(t))
   
-  deg <- table %>%
-    dplyr::select(logFC, t, P.Value) %>% 
-    dplyr::filter(!is.na(t)) %>% 
-    as.matrix()
-  
-  deg %>% as.data.frame() %>% saveRDS(paste0("data/DEGct/DEG_", cell_line, "_", cell_type, ".rds"))
+  deg %>% saveRDS(paste0("../data/DEGct/DEG_", cell_line, "_", cell_type, ".rds"))
   
   n_tfs = 12 
-  
+  row.names(deg) = deg$ID
   contrast_acts <- decoupleR::run_ulm(mat = deg[, 't', drop = FALSE], 
                                       net = net, 
                                       .source = 'source', 
@@ -69,7 +69,7 @@ Run_deg = function(cell_type, cell_line){
                                       minsize = 10)
   
   f_contrast_acts <- contrast_acts %>%
-    dplyr::mutate(rnk = NA)
+    mutate(rnk = NA)
   
   msk <- f_contrast_acts$score > 0
   
@@ -77,9 +77,9 @@ Run_deg = function(cell_type, cell_line){
   f_contrast_acts[!msk, 'rnk'] <- rank(-abs(f_contrast_acts[!msk, 'score']))
   
   tfs <- f_contrast_acts %>%
-    dplyr::arrange(rnk) %>%
+    arrange(rnk) %>%
     head(n_tfs) %>%
-    dplyr::pull(source)
+    pull(source)
   
   f_contrast_acts <- f_contrast_acts %>%
     filter(source %in% tfs) %>%
@@ -87,31 +87,30 @@ Run_deg = function(cell_type, cell_line){
   
   colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu")[c(2, 10)])
   
-  p <- ggplot2::ggplot(data = f_contrast_acts, 
-                       mapping = ggplot2::aes(x = stats::reorder(source, score), 
-                                              y = score)) + 
-    ggplot2::geom_bar(mapping = ggplot2::aes(fill = score),
+  p <- f_contrast_acts %>% ggplot()+
+    aes(x = stats::reorder(source, score), y = score) + 
+    geom_bar(mapping = ggplot2::aes(fill = score),
                       color = "black",
                       stat = "identity") +
-    ggplot2::scale_fill_gradient2(low = colors[1], 
+    scale_fill_gradient2(low = colors[1], 
                                   mid = "whitesmoke", 
                                   high = colors[2], 
                                   midpoint = 0) + 
-    ggplot2::theme_minimal() +
-    ggplot2::theme(axis.title = element_text(face = "bold", size = 12),
-                   axis.text.x = ggplot2::element_text(angle = 45, 
-                                                       hjust = 1, 
-                                                       size = 10, 
-                                                       face = "bold"),
-                   axis.text.y = ggplot2::element_text(size = 10, 
-                                                       face = "bold"),
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold", 
+                                    size = 12),
+                   axis.text.x = element_text(angle = 45, 
+                                              hjust = 1, 
+                                              size = 10,
+                                              face = "bold"),
+                   axis.text.y = element_text(size = 10, 
+                                              face = "bold"),
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank()) +
-    ggplot2::xlab("TFs")+
     labs(x = "Transcription Factors", y = "Predicted activity score", title = cell_type)
   
   print(p)
-  paste0("figures/", cell_line, "TF_activity_", cell_type, ".png") %>%
+  paste0("../figures/", cell_line, "TF_activity_", cell_type, ".png") %>%
     ggsave(plot = p,
            width = 10,
            height = 7,
@@ -120,13 +119,12 @@ Run_deg = function(cell_type, cell_line){
   contrast_acts %>% 
     as.data.frame() %>% 
     filter(condition == "t") %>% 
-    saveRDS(paste0("data/TFS_ct/", cell_line, "TF_activity_", cell_type, ".rds"))
+    saveRDS(paste0("../data/TFct/", cell_line, "TF_activity_", cell_type, ".rds"))
 }
 
-# GL261
+# run function for all cell type in selected cell line
 for (cell_t in unique(ct)){
   Run_deg(cell_t, cell_line = NAME)
 }
-
 
 
