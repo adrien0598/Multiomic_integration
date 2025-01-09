@@ -22,8 +22,8 @@ net <- decoupleR::get_collectri(organism = 'mouse',
 NAME = "GL261"
 # NAME = "CT2A"
 PB = paste0("../data/PseudoBulk_ct_", NAME, ".tsv")
-counts <- read.table(PB, header = TRUE) %>%
-  select(-grep("RES_D7", colnames(counts)))
+counts <- read.table(PB, header = TRUE) 
+counts = counts[,!grepl("RES_D7", colnames(counts))]
 
 # Design
 if (NAME == "GL261"){
@@ -44,8 +44,9 @@ if (NAME == "GL261"){
 Run_deg = function(cell_type, cell_line){
   counts_tmp = counts[,ct == cell_type]
   gene.size = counts_tmp %>% apply(1, sum)
-  counts_tmp = counts_tmp[gene.size > 25,]
+  counts_tmp = counts_tmp[gene.size > 24,]
   design_tmp = design[ct == cell_type,]
+  print(design_tmp)
   fit <- vsnMatrix(as.matrix(counts_tmp))
   meanSdPlot(fit) # quality control
   counts_vsn <- as.data.frame(vsn::predict(fit,as.matrix(counts_tmp)))
