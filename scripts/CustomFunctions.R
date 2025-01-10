@@ -25,3 +25,19 @@ runLimma <- function(measurements, targets, comparisons = NULL)
     return(NULL)
   }
 }
+
+plot_top <- function(d, n_top, score){
+  colnames(d) = c("ID", "score")
+  top_up <- slice_head(d, n = n_top)
+  top_down <- slice_tail(d, n = n_top)
+  
+  p <- bind_rows(list(up = top_up, down = top_down), .id = "status") %>%
+    mutate(ID = fct_inorder(ID)) %>%
+    ggplot(aes(x = score, y = ID, fill = status)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c("up" = "red", "down" = "blue")) +
+    ylab(score)+
+    theme_prism()
+  
+  return(p)
+}
