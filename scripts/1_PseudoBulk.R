@@ -10,10 +10,10 @@ library(edgeR)
 library(tibble)
 
 # import Seurat object
-NAME = "GL261"
-# NAME = "CT2A"
-SEURAT_OBJ = "20250106_GL261_final_sharedAnnot.rds"
-# SEURAT_OBJ = "20240628_CT2A_deep_annotation_myeloid_homo.rds"
+#NAME = "GL261"
+NAME = "CT2A"
+#SEURAT_OBJ = "20250106_GL261_final_sharedAnnot.rds"
+SEURAT_OBJ = "20240628_CT2A_deep_annotation_myeloid_homo.rds"
 CONDITION = "cond.day"
 CELL_TYPE = "cell_types"
 IDENT = "orig.ident"
@@ -29,7 +29,11 @@ mm = paste0(cond, "-", ct)
 condition = c()
 for (m in (paste0(mice,ct) %>% unique())){
   tmp = counts[,m == paste0(mice,ct)]
-  tmp_pb = tmp %>% apply(1, sum)
+  if (is.null(ncol(tmp))){
+    tmp_pb = tmp
+  }else{
+    tmp_pb = tmp %>% apply(1, sum)
+  }
   pb[[m]] = tmp_pb
   condition = c(condition, unique(mm[m == paste0(mice,ct)]))
 }

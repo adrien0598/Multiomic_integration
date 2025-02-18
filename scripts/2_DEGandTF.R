@@ -19,8 +19,8 @@ net <- decoupleR::get_collectri(organism = 'mouse',
                                 split_complexes = FALSE)
 
 # PseudoBulk
-NAME = "GL261"
-# NAME = "CT2A"
+#NAME = "GL261"
+NAME = "CT2A"
 PB = paste0("../data/PseudoBulk_ct_", NAME, ".tsv")
 counts <- read.table(PB, header = TRUE) 
 counts = counts[,!grepl("RES_D7", colnames(counts))]

@@ -24,7 +24,7 @@ for (f in files) {
 }
 
 # select labels to be plotted in the graph
-n = 3 # number of labels per cluster (2*n)
+n = 10 # number of labels per cluster (2*n)
 gg_selection = NULL
 for (f in files) {
   ct = f %>% substring((6+nchar(cell_line)), (nchar(f)-4))
